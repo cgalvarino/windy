@@ -27,9 +27,7 @@
     L.tileLayer("http://{s}.sm.mapstack.stamen.com/(toner-lite,$fff[difference],$fff[@23],$fff[hsl-saturation@20])/{z}/{x}/{y}.png")
       .addTo(map);
 
-    $.ajax({
-      url: 'gfs2.json',
-    }).done(function(result) {
+    $.getJSON('gfs.json').done(function(result) {
       var timer = null;
 
       //Add CanvasLayer to the map
