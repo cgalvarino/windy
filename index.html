@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+  <title>GFS Winds on Leaflet Canvas</title>
+  <meta charset="utf-8">
+
+  <style>
+    html, body, #map {
+      height:100%;
+      width:100%;
+      padding:0px;
+      margin:0px;
+    } 
+  </style>
+
+</head>
+<body>
+  <div id="map"></div>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+  <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+  <script src="L.CanvasOverlay.js"></script>
+  <script src="windy.js"></script>
+  
+  <script>
+    var map = L.map('map').setView([35, -75], 3);
+    L.tileLayer("http://{s}.sm.mapstack.stamen.com/(toner-lite,$fff[difference],$fff[@23],$fff[hsl-saturation@20])/{z}/{x}/{y}.png")
+      .addTo(map);
+
+    $.get('gfs.json', { cache:true } ).success( function(result) {
+      var timer = null;
+
+      //Add CanvasLayer to the map
+      canvasOverlay = L.canvasOverlay()
+        .drawing(redraw)
+        .addTo(map);
+
+      //windy object  
+      windy = new Windy({canvas: canvasOverlay.canvas(), data: result});
+
+      //prepare context global var
+      context = canvasOverlay.canvas().getContext('2d');
+
+      //start drawing wind map
+      function redraw(overlay, params) {
+
+        if( timer ) 
+          window.clearTimeout( timer ); 
+
+        timer = setTimeout(function() { //showing wind is delayed
+          var bounds = map.getBounds();
+          var size = map.getSize();
+
+          /*context.rect(0,0,3000,3000);
+          context.fillStyle = "red";
+          context.fill();*/
+
+          windy.start( [[0,0],[size.x, size.y]], size.x, size.y, 
+            [[bounds._southWest.lng, bounds._southWest.lat ],[bounds._northEast.lng, bounds._northEast.lat]] );
+        },750)
+
+      }
+
+      //clear canvas and stop animation
+      function clearWind() {
+        windy.stop();
+        context.clearRect(0,0,3000, 3000);
+      }   
+
+      map.on('dragstart', function() { clearWind() });
+      map.on('zoomstart', function() { clearWind() });
+      map.on('resize', function() { clearWind() });
+
+    })
+  </script>
+  
+</body>
+</html>
