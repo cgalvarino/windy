@@ -16,7 +16,7 @@ var Windy = function( params ){
   var MAX_WIND_INTENSITY = 40;              // wind velocity at which particle intensity is maximum (m/s)
   var MAX_PARTICLE_AGE = 100;                // max number of frames a particle is drawn before regeneration
   var PARTICLE_LINE_WIDTH = 0.8;              // line width of a drawn particle
-  var PARTICLE_MULTIPLIER = 1/90;              // particle count scalar (completely arbitrary--this values looks nice)
+  var PARTICLE_MULTIPLIER = 1.5;              // particle count scalar (completely arbitrary--this values looks nice)
   var PARTICLE_REDUCTION = 0.75;            // reduce particle count to this much of normal for mobile devices
   var FRAME_RATE = 20;                      // desired milliseconds per frame
   var BOUNDARY = 0.45;
@@ -311,7 +311,7 @@ var Windy = function( params ){
   };
 
 
-  var animate = function(bounds, field) {
+  var animate = function(bounds, field, xres) {
 
     function asColorStyle(r, g, b, a) {
         return "rgba(" + 243 + ", " + 243 + ", " + 238 + ", " + a + ")";
@@ -363,7 +363,7 @@ var Windy = function( params ){
     var colorStyles = windIntensityColorScale(INTENSITY_SCALE_STEP, MAX_WIND_INTENSITY);
     var buckets = colorStyles.map(function() { return []; });
 
-    var particleCount = Math.round(bounds.width * bounds.height * PARTICLE_MULTIPLIER);
+    var particleCount = Math.max(Math.round(bounds.width * bounds.height * PARTICLE_MULTIPLIER * xres),25);
     if (isMobile()) {
       particleCount *= PARTICLE_REDUCTION;
     }
@@ -456,7 +456,8 @@ var Windy = function( params ){
       east: deg2rad(extent[1][0]),
       west: deg2rad(extent[0][0]),
       width: width,
-      height: height
+      height: height,
+      xres: (deg2rad(extent[1][0]) - deg2rad(extent[0][0])) / (width > 0 ? width : 0.00000001)
     };
 
     stop();
@@ -467,7 +468,7 @@ var Windy = function( params ){
       interpolateField( grid, buildBounds( bounds, width, height), mapBounds, function( bounds, field ){
         // animate the canvas with random points
         windy.field = field;
-        animate( bounds, field );
+        animate( bounds, field, mapBounds.xres ); // mapBounds.xres probably shouldn't be passed like this
       });
 
     });
